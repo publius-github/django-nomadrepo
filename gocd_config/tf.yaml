@@ -1,0 +1,56 @@
+# nomad.gocd.yaml
+format_version: 5
+common:
+  nomad-dev-plan-task: &nomad-dev-plan-task
+    command: /bin/bash
+    working_directory: terraform/aws/env/eu-west-1
+    arguments:
+      - -c
+      - |
+        set -e
+        terraform init
+        terraform plan -var-file=terraform.tfvars -out=plan.out -input=false
+        tar -zcf terraform.tgz .terraform
+  nomad-dev-apply-task: &nomad-dev-apply-task
+    command: /bin/bash
+    working_directory: terraform/aws/env/eu-west-1
+    arguments:
+      - -c
+      - |
+        set -e
+        tar -xzf terraform.tgz 
+        terraform apply -auto-approve -input=false plan.out
+pipelines:
+  dev-nomad:
+    group: innovation-day
+    materials:
+      repo:
+        git: git@github.com:publius-github/django-nomadrepo.git
+        branch: main
+    stages:
+      - nomad-dev-plan:
+          artifacts:
+            - build:
+                source: terraform/aws/env/eu-west-1/plan.out
+            - build:
+                source: terraform/aws/env/eu-west-1/terraform.tgz
+          tasks:
+            - exec: *nomad-dev-plan-task
+      - nomad-dev-apply:
+          approval:
+            type: manual
+            allow_only_on_success: true
+          tasks:
+            - fetch:
+                stage: nomad-dev-plan
+                job: nomad-dev-plan
+                is_file: true
+                source: plan.out
+                destination: terraform/aws/env/eu-west-1
+            - fetch:
+                stage: nomad-dev-plan
+                job: nomad-dev-plan
+                is_file: true
+                source: terraform.tgz
+                destination: terraform/aws/env/eu-west-1
+            - exec: *nomad-dev-apply-task
