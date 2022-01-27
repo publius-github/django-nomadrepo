@@ -42,7 +42,7 @@ Update `terraform.tfvars` with your SSH key name and your AMI ID if you created
 a custom AMI:
 
 ```bash
-region                  = "us-east-1"
+region                  = "eu-west-1"
 ami                     = "ami-09730698a875f6abd"
 instance_type           = "t2.medium"
 key_name                = "KEY_NAME"
@@ -56,7 +56,7 @@ optionally replace the Nomad binary at runtime by adding the `nomad_binary`
 variable like so:
 
 ```bash
-region                  = "us-east-1"
+region                  = "eu-west-1"
 ami                     = "ami-09730698a875f6abd"
 instance_type           = "t2.medium"
 key_name                = "KEY_NAME"
